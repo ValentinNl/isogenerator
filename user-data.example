@@ -1,7 +1,59 @@
 #cloud-config
 autoinstall:
+  identity: {hostname: '', password: $encrypted_pwd,
+    realname: admin, username: admin}
+  keyboard: {layout: fr, toggle: null, variant: ''}
+  locale: en_US.UTF-8
+  network:
+    ethernets:
+      eno1:
+        dhcp4: true
+        optional: true
+    version: 2
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    install-server: true
+  storage:
+    config:
+    - {ptable: gpt, path: /dev/sda, wipe: superblock, preserve: false, name: '', grub_device: false,
+      type: disk, id: disk-sda}
+    - {device: disk-sda, size: 536870912, wipe: superblock, flag: boot, number: 1,
+      preserve: false, grub_device: true, type: partition, id: partition-0}
+    - {fstype: fat32, volume: partition-0, preserve: false, type: format, id: format-0}
+    - {device: disk-sda, size: 1073741824, wipe: superblock, flag: '', number: 2,
+      preserve: false, grub_device: false, type: partition, id: partition-1}
+    - {fstype: ext4, volume: partition-1, preserve: false, type: format, id: format-1}
+    - {device: disk-sda, size: -1, wipe: superblock, flag: '', number: 3,
+      preserve: false, grub_device: false, type: partition, id: partition-2}
+    - {volume: partition-2, key: mykey, preserve: false, type: dm_crypt,
+      id: dm_crypt-0}
+    - name: ubuntu-vg
+      devices: [dm_crypt-0]
+      preserve: false
+      type: lvm_volgroup
+      id: lvm_volgroup-0
+    - {name: ubuntu-lv, volgroup: lvm_volgroup-0, size: 107374182400B, wipe: superblock,
+      preserve: false, type: lvm_partition, id: lvm_partition-0}
+    - {name: lv-0, volgroup: lvm_volgroup-0, size: 100GB, wipe: superblock,
+      preserve: false, type: lvm_partition, id: lvm_partition-1}
+    - {fstype: ext4, volume: lvm_partition-0, preserve: false, type: format, id: format-4}
+    - {path: /, device: format-4, type: mount, id: mount-4}
+    - {name: lv-1, volgroup: lvm_volgroup-0, size: 80GB, wipe: superblock,
+      preserve: false, type: lvm_partition, id: lvm_partition-2}
+    - {fstype: ext4, volume: lvm_partition-2, preserve: false, type: format, id: format-5}
+    - {path: /var, device: format-5, type: mount, id: mount-5}
+    - {name: lv-2, volgroup: lvm_volgroup-0, size: 50GB, wipe: superblock,
+      preserve: false, type: lvm_partition, id: lvm_partition-3}
+    - {fstype: ext4, volume: lvm_partition-3, preserve: false, type: format, id: format-6}
+    - {path: /tmp, device: format-6, type: mount, id: mount-6}
+    - {fstype: ext4, volume: lvm_partition-1, preserve: false, type: format, id: format-7}
+    - {path: /home, device: format-7, type: mount, id: mount-7}
+    - {name: lv-3, volgroup: lvm_volgroup-0, size: 100GB, wipe: superblock,
+      preserve: false, type: lvm_partition, id: lvm_partition-4}
+    - {fstype: ext4, volume: lvm_partition-4, preserve: false, type: format, id: format-8}
+    - {path: /opt, device: format-8, type: mount, id: mount-8}
+    - {path: /boot, device: format-1, type: mount, id: mount-1}
+    - {path: /boot/efi, device: format-0, type: mount, id: mount-0}
+  updates: security
   version: 1
-  identity:
-    hostname: ubuntu-server
-    password: "$6$exDY1mhS4KUYCE/2$zmn9ToZwTKLhCw.b4/b.ZRTIZM30JZ4QrOQ2aOXJ8yk96xpcCof0kxKwuX1kqLG/ygbJ1f8wxED22bTL4F46P0"
-    username: ubuntu
